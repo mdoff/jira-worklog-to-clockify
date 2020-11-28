@@ -6,7 +6,7 @@ const dateEnd = `2020-11-27`;
 
 async function main() {
   const worklogs = await jiraWorklogs(dateStart, dateEnd);
-  // const clockData = await clockifyImport(worklogs);
+  const clockData = await clockifyImport(worklogs);
 
   console.log({ worklogs });
 }
