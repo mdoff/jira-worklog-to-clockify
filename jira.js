@@ -1,27 +1,17 @@
 const fetch = require("node-fetch");
 const moment = require("moment");
-const {
-  jiraAccountId,
-  jiraURL,
-  jiraProject,
-  jiraCookie,
-} = require("./config.json");
+const { jiraURL, jiraProject, jiraToken, jiraEmail } = require("./config.json");
 
 async function fetchJira(uri) {
   const data = await fetch(encodeURI(uri), {
     headers: {
-      accept: "*/*",
-      "accept-language": "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7",
-      "ap-client-key": "timereports",
-      "sec-fetch-dest": "empty",
-      "sec-fetch-mode": "cors",
-      "sec-fetch-site": "same-origin",
-      cookie: jiraCookie,
+      Accept: "application/json",
+      "X-Atlassian-Token": "no-check",
+      Authorization: `Basic ${Buffer.from(`${jiraEmail}:${jiraToken}`).toString(
+        "base64"
+      )}`,
     },
-    referrerPolicy: "same-origin",
-    body: null,
     method: "GET",
-    mode: "cors",
   });
   return await data.json();
 }
@@ -45,10 +35,10 @@ async function fetchTimeLogs(start, end, accountId) {
   return { issues: [...baseIssues, ...newIssues] };
 }
 
-function getWorklogsFromIssues(issues) {
+function getWorklogsFromIssues(issues, accountId) {
   return issues.flatMap((issue) =>
     issue.fields.worklog.worklogs
-      .filter((worklog) => worklog.author.accountId === jiraAccountId)
+      .filter((worklog) => worklog.author.accountId === accountId)
       .map((worklog) => ({
         key: issue.key,
         started: worklog.started,
@@ -87,9 +77,10 @@ function getDateRange(dateStart, dateEnd) {
 }
 
 async function getWorklogs(dateStart, dateEnd) {
-  const data = await fetchTimeLogs(dateStart, dateEnd, jiraAccountId);
+  const { accountId } = await fetchJira(`${jiraURL}/rest/api/3/myself`);
+  const data = await fetchTimeLogs(dateStart, dateEnd, accountId);
   const dates = getDateRange(dateStart, dateEnd);
-  const rawWorklogs = getWorklogsFromIssues(data.issues);
+  const rawWorklogs = getWorklogsFromIssues(data.issues, accountId);
 
   return dates.map((date) => ({
     ...reduceTimeLog(getTimeLogForDate(rawWorklogs, date)),
