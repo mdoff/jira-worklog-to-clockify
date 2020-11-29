@@ -4,7 +4,7 @@ const moment = require("moment");
 const clockifyImport = require("./clockify");
 const jiraWorklogs = require("./jira");
 
-async function main(dateStart, dateEnd, config = "./config.json") {
+async function main(dateStart, dateEnd, config = "../config.json") {
   const configFile = require(config);
   const worklogs = await jiraWorklogs(dateStart, dateEnd, configFile);
   const clockData = await clockifyImport(worklogs, configFile);
