@@ -75,6 +75,12 @@ function getDateRange(dateStart, dateEnd) {
   return dates;
 }
 
+/**
+ * @param {string} dateStart  - date in YYYY-MM-DD format
+ * @param {string} dateEnd - date in YYYY-MM-DD format
+ * @param {{jiraToken: string, jiraEmail: string, jiraURL: string, jiraProject: string}} config - config object with jira credentials
+ * @returns {{keys: string, time: number, date: string}[]} - Returns array of worklogs, time in seconds, date in YYYY-DD-MM format, keys will contain string with jira ticket numbers
+ */
 async function getWorklogs(dateStart, dateEnd, config) {
   const { accountId } = await fetchJira(
     `${config.jiraURL}/rest/api/3/myself`,

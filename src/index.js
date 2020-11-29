@@ -4,6 +4,11 @@ const moment = require("moment");
 const clockifyImport = require("./clockify");
 const jiraWorklogs = require("./jira");
 
+/**
+ * @param {string} dateStart  - date in YYYY-MM-DD format
+ * @param {string} dateEnd - date in YYYY-MM-DD format
+ * @param {string} config - path to config file
+ */
 async function main(dateStart, dateEnd, config = "../config.json") {
   const configFile = require(config);
   const worklogs = await jiraWorklogs(dateStart, dateEnd, configFile);
