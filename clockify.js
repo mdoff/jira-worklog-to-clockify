@@ -1,16 +1,10 @@
 const fetch = require("node-fetch");
 const moment = require("moment");
-const {
-  clockifyProject,
-  clockifyKey,
-  clockifyWorkspace,
-  defaultStartTime,
-} = require("./config.json");
 
-async function clockifyAdd(clockifyStart, clockifyEnd, description) {
-  const uri = `https://api.clockify.me/api/v1/workspaces/${clockifyWorkspace}/time-entries`;
+async function clockifyAdd(clockifyStart, clockifyEnd, description, config) {
+  const uri = `https://api.clockify.me/api/v1/workspaces/${config.clockifyWorkspace}/time-entries`;
   const body = JSON.stringify({
-    projectId: clockifyProject,
+    projectId: config.clockifyProject,
     start: clockifyStart,
     end: clockifyEnd,
     billable: true,
@@ -18,14 +12,17 @@ async function clockifyAdd(clockifyStart, clockifyEnd, description) {
   });
 
   const response = await fetch(encodeURI(uri), {
-    headers: { "X-Api-Key": clockifyKey, "Content-Type": "application/json" },
+    headers: {
+      "X-Api-Key": config.clockifyKey,
+      "Content-Type": "application/json",
+    },
     method: "POST",
     body,
   });
   return await response.json();
 }
 
-function generateClockifyEntry(worklog) {
+function generateClockifyEntry(worklog, defaultStartTime) {
   const date = moment(worklog.date).add(defaultStartTime, "hours");
   const dateEnd = moment(worklog.date)
     .add(defaultStartTime, "hours")
@@ -37,11 +34,18 @@ function generateClockifyEntry(worklog) {
   };
 }
 
-async function importFromWorklog(worklogs) {
-  const entries = worklogs.map(generateClockifyEntry);
+async function importFromWorklog(worklogs, config) {
+  const entries = worklogs.map((worklog) =>
+    generateClockifyEntry(worklog, config.defaultStartTime)
+  );
   return await Promise.all(
     entries.map(async (entry) => {
-      return await clockifyAdd(entry.start, entry.end, entry.description);
+      return await clockifyAdd(
+        entry.start,
+        entry.end,
+        entry.description,
+        config
+      );
     })
   );
 }

@@ -1,24 +1,23 @@
 const fetch = require("node-fetch");
 const moment = require("moment");
-const { jiraURL, jiraProject, jiraToken, jiraEmail } = require("./config.json");
 
-async function fetchJira(uri) {
+async function fetchJira(uri, config) {
   const data = await fetch(encodeURI(uri), {
     headers: {
       Accept: "application/json",
       "X-Atlassian-Token": "no-check",
-      Authorization: `Basic ${Buffer.from(`${jiraEmail}:${jiraToken}`).toString(
-        "base64"
-      )}`,
+      Authorization: `Basic ${Buffer.from(
+        `${config.jiraEmail}:${config.jiraToken}`
+      ).toString("base64")}`,
     },
     method: "GET",
   });
   return await data.json();
 }
 
-async function fetchTimeLogs(start, end, accountId) {
-  const searchUri = `${jiraURL}/rest/api/2/search?fields=project,issuetype,resolution,summary,priority,status,parent,issuelinks,worklog,customfield_10013,customfield_10015,workeduser,customfield_10020,customfield_10026&maxResults=3000&jql=project="${jiraProject}" and worklogDate >= "${start}" and worklogDate <= "${end}" and worklogAuthor in ("${accountId}")&startAt=0`;
-  const data = await fetchJira(searchUri);
+async function fetchTimeLogs(start, end, config, accountId) {
+  const searchUri = `${config.jiraURL}/rest/api/2/search?fields=project,issuetype,resolution,summary,priority,status,parent,issuelinks,worklog,customfield_10013,customfield_10015,workeduser,customfield_10020,customfield_10026&maxResults=3000&jql=project="${config.jiraProject}" and worklogDate >= "${start}" and worklogDate <= "${end}" and worklogAuthor in ("${accountId}")&startAt=0`;
+  const data = await fetchJira(searchUri, config);
   const additional = data.issues.filter(
     (issue) => issue.fields.worklog.total > issue.fields.worklog.maxResults
   );
@@ -27,7 +26,7 @@ async function fetchTimeLogs(start, end, accountId) {
   );
   const newIssues = await Promise.all(
     additional.map(async ({ key, self }) => {
-      const data = await fetchJira(`${self}/worklog`);
+      const data = await fetchJira(`${self}/worklog`, config);
       return { key, fields: { worklog: data } };
     })
   );
@@ -76,16 +75,21 @@ function getDateRange(dateStart, dateEnd) {
   return dates;
 }
 
-async function getWorklogs(dateStart, dateEnd) {
-  const { accountId } = await fetchJira(`${jiraURL}/rest/api/3/myself`);
-  const data = await fetchTimeLogs(dateStart, dateEnd, accountId);
+async function getWorklogs(dateStart, dateEnd, config) {
+  const { accountId } = await fetchJira(
+    `${config.jiraURL}/rest/api/3/myself`,
+    config
+  );
+  const data = await fetchTimeLogs(dateStart, dateEnd, config, accountId);
   const dates = getDateRange(dateStart, dateEnd);
   const rawWorklogs = getWorklogsFromIssues(data.issues, accountId);
 
-  return dates.map((date) => ({
-    ...reduceTimeLog(getTimeLogForDate(rawWorklogs, date)),
-    date,
-  }));
+  return dates
+    .map((date) => ({
+      ...reduceTimeLog(getTimeLogForDate(rawWorklogs, date)),
+      date,
+    }))
+    .filter((worklog) => worklog.time > 0); // don't log empty entries
 }
 
 module.exports = getWorklogs;
