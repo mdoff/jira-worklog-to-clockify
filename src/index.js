@@ -9,9 +9,15 @@ const jiraWorklogs = require("./jira");
  * @param {string} dateEnd - date in YYYY-MM-DD format
  * @param {string} config - path to config file
  */
-async function main(dateStart, dateEnd, config = "../config.json") {
+async function main(dateStart, dateEnd, config = "../config.json", test = false) {
   const configFile = require(config);
   const worklogs = await jiraWorklogs(dateStart, dateEnd, configFile);
+
+  if(test) {
+    console.log(worklogs)
+    return
+  }
+
   const clockData = await clockifyImport(worklogs, configFile);
 
   clockData.forEach((clockifyEntry) => {
@@ -55,6 +61,13 @@ const { options } = argv
       description: "Path to configuration file, default value: config.json (optional)",
       example: "'node index.js --config=some-file.json' or 'node index.js -c some-file.json'",
     },
+    {
+      name: "test",
+      short: "t",
+      type: "bool",
+      description: "Only fetch worklogs without saving them (optional)",
+      example: "'node index.js --test' or 'node index.js -t'",
+    },
   ])
   .run();
 
@@ -62,7 +75,8 @@ if (options.start) {
   main(
     options.start,
     options.end ? options.end : options.start,
-    options.config
+    options.config,
+    options.test
   );
 } else {
   console.log("--start (-s) option is required");
