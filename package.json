@@ -6,6 +6,9 @@
   "author": "Tomasz Lewinski <tomasz.lewinski@scalac.io>",
   "license": "MIT",
   "private": true,
+  "engines": {
+    "node": ">= 11"
+  },
   "scripts": {
     "start": "node src/index.js"
   },

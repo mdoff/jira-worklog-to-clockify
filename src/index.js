@@ -9,13 +9,18 @@ const jiraWorklogs = require("./jira");
  * @param {string} dateEnd - date in YYYY-MM-DD format
  * @param {string} config - path to config file
  */
-async function main(dateStart, dateEnd, config = "../config.json", test = false) {
+async function main(
+  dateStart,
+  dateEnd,
+  config = "../config.json",
+  test = false
+) {
   const configFile = require(config);
   const worklogs = await jiraWorklogs(dateStart, dateEnd, configFile);
 
-  if(test) {
-    console.log(worklogs)
-    return
+  if (test) {
+    console.log(worklogs);
+    return;
   }
 
   const clockData = await clockifyImport(worklogs, configFile);
@@ -45,28 +50,32 @@ const { options } = argv
       short: "s",
       type: "date",
       description: "Defines starting date (required)",
-      example: "'node index.js --start=2020-11-20' or 'node index.js -s 2020-11-20'",
+      example:
+        "'node src/index.js --start=2020-11-20' or 'node src/index.js -s 2020-11-20'",
     },
     {
       name: "end",
       short: "e",
       type: "date",
       description: "Defines end date (optional)",
-      example: "'node index.js --end=2020-11-20' or 'node index.js -e 2020-11-20'",
+      example:
+        "'node src/index.js --end=2020-11-20' or 'node src/index.js -e 2020-11-20'",
     },
     {
       name: "config",
       short: "c",
       type: "path",
-      description: "Path to configuration file, default value: config.json (optional)",
-      example: "'node index.js --config=some-file.json' or 'node index.js -c some-file.json'",
+      description:
+        "Path to configuration file, default value: config.json (optional)",
+      example:
+        "'node src/index.js --config=some-file.json' or 'node src/index.js -c some-file.json'",
     },
     {
       name: "test",
       short: "t",
       type: "bool",
       description: "Only fetch worklogs without saving them (optional)",
-      example: "'node index.js --test' or 'node index.js -t'",
+      example: "'node src/index.js --test' or 'node src/index.js -t'",
     },
   ])
   .run();

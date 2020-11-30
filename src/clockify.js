@@ -34,19 +34,33 @@ function generateClockifyEntry(worklog, defaultStartTime) {
   };
 }
 
+async function clockifyAddDelayed(entry, config, delay) {
+  // clockify api have limit of 10 requests per second
+  // this function will add delay to requests to meed this limit
+  return new Promise(async (resolve) => {
+    setTimeout(
+      async () =>
+        resolve(
+          await clockifyAdd(entry.start, entry.end, entry.description, config)
+        ),
+      delay
+    );
+  });
+}
+
+/**
+ * @param {{keys: string, time: number, date: string}[]} - Array of worklogs, time in seconds, date in YYYY-DD-MM format, keys will contain string with jira ticket numbers worklogs
+ * @param {{clockifyKey: string, clockifyProject: string, clockifyWorkspace: string}} config - config object with clockify credentials
+ * @returns {*[]} - array with clockify response objects
+ */
 async function importFromWorklog(worklogs, config) {
   const entries = worklogs.map((worklog) =>
     generateClockifyEntry(worklog, config.defaultStartTime)
   );
   return await Promise.all(
-    entries.map(async (entry) => {
-      return await clockifyAdd(
-        entry.start,
-        entry.end,
-        entry.description,
-        config
-      );
-    })
+    entries.map((entry, index) =>
+      clockifyAddDelayed(entry, config, index * 200)
+    )
   );
 }
 
