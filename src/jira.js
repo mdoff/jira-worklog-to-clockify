@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const moment = require("moment");
+const getDateRange = require('./getDateRange');
 
 async function fetchJira(uri, config) {
   const data = await fetch(encodeURI(uri), {
@@ -64,15 +65,6 @@ function reduceTimeLog(worklogs) {
     { keys: [], time: 0 }
   );
   return { keys: keys.join(", "), time };
-}
-
-function getDateRange(dateStart, dateEnd) {
-  const diff = moment(dateEnd).diff(moment(dateStart), "days");
-  const dates = [];
-  for (let i = 0; i <= diff; i++) {
-    dates.push(moment(dateStart).add(i, "day").format("YYYY-MM-DD"));
-  }
-  return dates;
 }
 
 /**

@@ -6,5 +6,6 @@
   "jiraToken": "",
   "jiraEmail": "",
   "jiraURL": "",
-  "jiraProject": ""
+  "jiraProject": "",
+  "defaultWorkTime": 28800
 }

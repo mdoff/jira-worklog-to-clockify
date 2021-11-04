@@ -3,6 +3,7 @@ const moment = require("moment");
 
 const clockifyImport = require("./clockify");
 const jiraWorklogs = require("./jira");
+const timelog = require("./timelog");
 
 /**
  * @param {string} dateStart  - date in YYYY-MM-DD format
@@ -16,7 +17,7 @@ async function main(
   test = false
 ) {
   const configFile = require(config);
-  const worklogs = await jiraWorklogs(dateStart, dateEnd, configFile);
+  const worklogs = configFile.jiraToken ? await jiraWorklogs(dateStart, dateEnd, configFile) : timelog(dateStart, dateEnd, configFile.defaultWorkTime);
 
   if (test) {
     console.log(worklogs);
